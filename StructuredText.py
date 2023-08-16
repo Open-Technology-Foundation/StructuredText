@@ -2,7 +2,6 @@
 import os
 import sys
 import re
-
 """
 # Module 'StructuredText'
 
@@ -15,6 +14,9 @@ transcripts, etc, with metadata, and other textual information,
 where human readability is required or desirable.
 
 Requires Python 3.10 or higher.
+
+See the associated `st.extract` application script that uses this 
+module at the shell.
 
 ## 'Strict' Mode
 Strict mode in the extract function controls how the function 
@@ -42,6 +44,18 @@ are handled as critical errors rather than warnings.
 
 """
 
+class StructuredTextError(Exception):
+    pass
+
+class InvalidInputTypeError(StructuredTextError):
+    pass
+
+class DuplicateKeyError(StructuredTextError):
+    pass
+
+class FileNotFoundError(StructuredTextError):
+    pass
+
 def extract(
     input_source: str | dict | list[str], 
     *, keyvar: str | None = None, 
@@ -49,6 +63,7 @@ def extract(
     quiet: bool = False, 
     strict: bool = False, 
     no_comments: bool = False,
+    no_errors:bool = False,
     freetext_name:str = '_FREETEXT_'
   ) -> dict:
   """
@@ -58,18 +73,24 @@ def extract(
   `StructuredText.extract` returns data in key:value format as 
   a dictionary.
 
-  Data in `input_source` should contain text lines in the format 
-  KEY:VALUE, where KEY is any valid Python variable name. 
-
-  Multi-line values are enclosed in Python-style triple double 
+  Data in/from `input_source` should contain text lines in the 
+  format KEY:VALUE, where KEY is any valid Python variable name. 
+  Eg,
+    DATE: 02/06/1957 00:02:00 
+  Enclose multi-line values with Pythonesque triple double 
   quotes (\"\"\").
+  Eg, 
+    DATE_TIME_LOCATION: \"\"\"
+      DATE: 02/06/1957 
+      TIME: 02:00:00
+      LOCATION: Bali
+      In Bali, the date is 02/06/1957 at 02:00:00.
+    \"\"\"
 
-  Blank lines that are not within multi-line values are ignored.
-
+  Blank lines not within multi-line values are ignored.
   Lines starting with '#' are treated as comments and are stored
   in a special key variable of '_COMMENT_n'. Optionally, comment
   lines can be ignored using `no_comments=True`.
-
   If no valid key:value pairs are found in the file, and 
   `Strict` mode is not set, then the entire content of 
   `input_source` is stored and returned in special key variable
@@ -84,30 +105,70 @@ def extract(
   single item with the key '_FREETEXT_'.
 
   Example:
-  >>> extract('youtube_video.transcript')
+  >>> import StructuredText as st
+  >>> st.extract('test01.transcript')
   {'VAR1': 'value1', 'VAR2': 'value2', 'VAR3': '\"\"\"\nmultiline value\n\"\"\"'}
-  >>> extract('empty.txt')
+  >>> st.extract('empty.txt')
   {'_FREETEXT_': 'the entire file content'}
   
   An example of a valid StructuredText file would be formatted like this:
   
-  ```
-  # This is a comment
-  VAR1: value1
-  
-  VAR2: value2
-  
-  VAR3: \"\"\"
-  This is a multi-line
-  value of any
-  length.
+  ```StructuredText
+  # StructuredText Example format.
+  # Each comment line is stored in the
+  # special keyvars _COMMENT_n (unless disabled).
+  PROJECT_NAME: Seeking Dharma
+  TITLE: Aspects of Secularised Dharmas
+  DATESTAMP: 02/06/1957 02:00:00
 
-  \"\"\"
-  
-  VAR4: value4
-  
-  ```
+  LOCATION: Bali
 
+  # Blank lines between the keyvars above 
+  # are ignored.
+  # Blank lines in a multi-line keyvar 
+  # (like below) are *not* ignored.
+  DESCRIPTION: \"""
+  Cherrypicking The Dharma?
+  Yes. I mean No. I mean, "The" Dharma?
+  There are many dharmas.  
+  Not all have a capital D.
+  And all have commonalities in values 
+  and practice.
+  So it's not really cherrypicking.
+  It's more like pickpocketing.
+
+  Pickpocketing from the various dharmas, 
+  both the flawed and the admirable, 
+  from ancient to present times, 
+  from whoever they are, and 
+  from wherever they may be.
+
+  It's about selecting basic wisdoms 
+  and practices, that most suit our own 
+  conditions and paths,
+  from the commonality of the global wise.
+
+  This commonality is a great resource for
+  developing resilient personal and group 
+  dharmas that are able to influence and 
+  guide with wisdom and compassion, as an 
+  alternative to reactivity and hate.
+  \"""
+
+  DEV_NOTE: \"""
+  There is a limitation when assigning values 
+  in multi-line keyvars where the value contains
+  embedded triple-double-quotes (\""").
+
+  Takeaway: Multi-line keyvar values need to 
+  have embedded triple-double-quotes escaped, 
+  eg, \"""
+  \"""
+
+  # My ID
+  ID: OKUSI420
+
+  ```
   """
 
   source      = ''
@@ -116,17 +177,14 @@ def extract(
     file_path = input_source
     source    = f"file '{file_path}'"
     if not os.path.isfile(file_path):
-      print(f"No such {source}", file=sys.stderr)
-      sys.exit(1)
+      raise FileNotFoundError(f"No such {source}")
     try:
       with open(file_path, 'r') as f:
         file_content = f.read()
     except FileNotFoundError:
-      print(f"File '{file_path}' not found", file=sys.stderr)
-      sys.exit(1)
+      raise FileNotFoundError(f"File '{file_path}' not found")
     except IOError:
-      print(f"File '{file_path}' could not be opened", file=sys.stderr)
-      sys.exit(1)
+      raise FileNotFoundError(f"File '{file_path}' could not be opened")
     # read text into lines list
     lines = file_content.splitlines()
   elif type(input_source) == list:
@@ -142,15 +200,13 @@ def extract(
       else:
         lines.append(f'{key}:{value}')
   else:
-    print(f"Invalid type in 'input_source' ('filename', list, or dict)", file=sys.stderr)
-    sys.exit(1)
+    raise InvalidInputTypeError(f"Invalid type in 'input_source' ('filename', list, or dict)")
 
   variables:dict    = {}
   FREETEXT          = ''
   if freetext_name != '_FREETEXT_' \
       and not re.compile(r'^([a-zA-Z][a-zA-Z0-9_]*)$').match(freetext_name):
-    print(f"Invalid freetext_name '{freetext_name}'")
-    sys.exit(1)
+    raise StructuredTextError(f"Invalid freetext_name '{freetext_name}'")
   ERRORS            = ''
   current_var_name  = ''
   current_var_value = ''
@@ -161,9 +217,9 @@ def extract(
 
   for line in lines:
     if multiline:
-      if line.rstrip() == '"""':
-        # '^"""\s*$' marks the end of a multiline variable
-        variables[current_var_name] = current_var_value.strip()
+      if re.search(r'^\s*\"\"\"\s*$', line):
+        # r'^\s*\"\"\"\s*$' marks the end of a multiline variable
+        variables[current_var_name] = current_var_value #.strip()
         # shortcut exit if keyvar is found 
         if keyvar and keyvar == current_var_name:
           return { keyvar: current_var_value }
@@ -171,10 +227,10 @@ def extract(
         current_var_value = ''
         multiline         = False
       else:
-        current_var_value += '\n' + line
+        current_var_value += ('\n' if current_var_value else '') + line
     else:
       if line.strip() == '':
-        # Ignore all blank lines
+        # Ignore all blank lines between keyvar declarations
         continue
       if line.lstrip().startswith('#'):
         if no_comments:
@@ -193,7 +249,8 @@ def extract(
         if current_var_name in variables:
           errmsg = f"Duplicate key '{current_var_name}' in {source}"
           if verbose or strict: print(errmsg, file=sys.stderr)
-          if strict: sys.exit(1)
+          if strict:
+            raise StructuredTextError(errmsg)
           ERRORS += errmsg + '\n'
         current_var_value = match.group(2).strip()
         if current_var_value == '"""':
@@ -213,7 +270,8 @@ def extract(
         errmsg = f"No variable key in '{line[:40]}...' in {source}"
         if (verbose or strict) and not keyvar: 
           print(errmsg, file=sys.stderr)
-        if strict: sys.exit(1)
+        if strict:
+          raise StructuredTextError(errmsg)
         ERRORS += errmsg + '\n'
         FREETEXT += line.replace('"""', '\\"\\"\\"') + '\n'
 
@@ -227,7 +285,8 @@ def extract(
     errmsg = f"No key variables found in {source}"
     if verbose or strict:
       print(errmsg, file=sys.stderr)
-    if strict: sys.exit(1)
+    if strict:
+      raise StructuredTextError(errmsg)
     if verbose: ERRORS += errmsg + '\n'
     FREETEXT = file_content
 
@@ -239,7 +298,8 @@ def extract(
       return { keyvar: variables.get(keyvar, '') }
     errmsg = f"Variable '{keyvar}' not found in {source}."
     if verbose or strict: print(errmsg, file=sys.stderr)
-    if strict: sys.exit(1)
+    if strict:
+      raise StructuredTextError(errmsg)
     ERRORS += errmsg + '\n'
     return {}
 
@@ -270,19 +330,22 @@ def extract(
   if '_ERRORS_' in variables:
     # Delete any previous _ERRORS_ in input_source
     del variables['_ERRORS_']
-  if ERRORS.strip():
+  if ERRORS.strip() and not no_errors:
     variables['_ERRORS_'] = ERRORS.strip()
 
   return variables
 
 
-def write(variables:dict, *, 
+def write_dict_to_st(variables:dict, *, 
       keyvar=None, 
       filename=None, 
       lf:int=2, 
-      sep:int=1):
-  """ Print out key variables in the 'dict' one by one in 
-      StructuredText format. """
+      sep:int=1
+  ):
+  """
+    Print out all key variables in 'dict' to 
+    StructuredText format. 
+  """
   hfile    = open(filename, 'w') if filename else sys.stdout 
   printend = '\n' * max(0, lf)
   sepc     = ' '  * max(0, sep)
@@ -303,126 +366,13 @@ def write(variables:dict, *,
       valueq = value.replace('"""\n', '\"\"\"\n')
       print(f'{key}:{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
     elif key.startswith('_COMMENT_'):
-      print(f'#{sepc}{value}', end=printend, file=hfile)
+      # comments are kept together
+      print(f'#{sepc}{value}', 
+        end=('\n' if len(printend) else printend), 
+        file=hfile)
     else:
       print(f'{key}:{sepc}{value}', end=printend, file=hfile)
   if filename: hfile.close()
   return True
-
-
-# ==============================================================================
-#!/usr/bin/python
-#import os
-#import sys
-#import StructuredText as st
-
-if __name__ == '__main__':
-  import argparse
-  import pydoc
-  script_name = os.path.basename(__file__)
-  p = argparse.ArgumentParser(
-      description='Extract key variables from Structured Text file.\n'
-        'For Structured Text format see library module StructuredText.',
-      epilog='Examples:\n',
-      formatter_class=argparse.RawTextHelpFormatter)
-  p.add_argument('filename', 
-      help=f'Text file.')
-  p.add_argument('keyvar', nargs='?',   default=None, 
-      help=f'Optional key variable to find and return;\n'
-            "by default returns all key variables; def. '%(default)s'.")
-  p.add_argument('-d', '--delvars',     type=str, default=None, 
-      help=f"List of comma delimited keys to remove from output; def. '%(default)s'.")
-  p.add_argument('-S', '--strict',      action='store_true', default=False, 
-      help=f'Impose Strict mode; exit with error if a key variable in a'
-            'line is not found.\n'
-            "If False, all free text is aggregated into key variable"
-            "_FREETEXT_; def. '%(default)s'.")
-  p.add_argument('-n', '--no_comments', action='store_true', default=False, 
-      help=f'Ignore #comment lines. Default is to not ignore comment lines\n'
-            "and store as '_COMMENT_n: comment'; def. '%(default)s'.")
-  p.add_argument('-f', '--freetext_name', type=str, default='_FREETEXT_', 
-      help=f"Name of key to collate free text; def. '%(default)s'.")
-  p.add_argument('-s', '--sep',         type=int, default=1, 
-      help=f"Number of spaces after ':'; def. '%(default)s'.")
-  p.add_argument('-l', '--lf',          type=int, default=2, 
-      help=f"Number of linefeeds printed after each key variable; def. '%(default)s'.")
-  p.add_argument('-k', '--showkeys',    action='store_true', default=False, 
-      help=f"Print all keys found in file and exit; def. '%(default)s'")
-  p.add_argument('-j', '--json',        action='store_true', default=False, 
-      help=f"Output raw json; def. '%(default)s'.")
-  p.add_argument('-o', '--output',      default=None, 
-      help=f"Output to filename; def '%(default)s'.")
-  p.add_argument('-i', '--json_indent', default='2', 
-      help=f"JSON output indent, integer or 'none'; def. '%(default)s'.")
-  p.add_argument('-v', '--verbose',     action='store_true', default=False, 
-      help=f"Be not quiet; def. '%(default)s'.")
-  def print_help_paged():
-    help_text = p.format_help()
-    pydoc.pager(help_text)
-  p.print_help = print_help_paged
-
-  args = p.parse_args()
-  if not os.path.exists(args.filename):
-    print(f"{script_name}: {args.filename} does not exist.", file=sys.stderr)
-    sys.exit(1)
-
-  if args.delvars:
-    delvars_list  = args.delvars.replace(',',' ').split()
-  else:
-    delvars_list = None
-
-  quiet = False if args.verbose else True
-  try:
-    """
-    def extract(
-        input_source: str | dict | list[str], 
-        *, 
-        keyvar: str | None = None, 
-        delvars:list[str]=[],
-        quiet: bool = False, 
-        strict: bool = False, 
-        no_comments: bool = False,
-        freetext_name:str = '_FREETEXT_'
-      ) -> dict:
-    """
-    variables = extract(
-        args.filename, 
-        keyvar=args.keyvar,
-        delvars=delvars_list,
-        quiet=quiet, 
-        strict=args.strict,
-        no_comments=args.no_comments,
-        freetext_name=args.freetext_name
-      )
-
-    if not variables:
-      sys.exit(1)
-
-    # Show found keys only then exit
-    if args.showkeys:
-      for key in variables: print(key)
-      sys.exit(0)
-
-    # Print out raw json then exit
-    if args.json:
-      import json
-      indent = None if args.json_indent == '' \
-          or args.json_indent.lower() == 'none' \
-          else max(0, int(args.json_indent))
-      with open(args.output, 'w') if args.output else sys.stdout as hfile:
-        print(json.dumps(variables, indent=indent), file=hfile)
-      sys.exit(0)
-
-    # Write out variables in StructuredText format to args.output
-    write(
-        variables, 
-        sep=args.sep, 
-        lf=args.lf, 
-        filename=args.output
-      )
-
-  except KeyboardInterrupt:
-    print('^C\n', file=sys.stderr)
-    sys.exit(1)
 
 #fin

@@ -1,7 +1,4 @@
-#!/usr/bin/python3.10
-import os
-import sys
-import re
+#!/usr/bin/env python3.10
 """
 # Module 'StructuredText'
 
@@ -23,7 +20,8 @@ Strict mode in the extract function controls how the function
 behaves when it encounters certain conditions or errors. 
 By default, Strict is set to False.
 
-Strict requires that *all* data is formatted in key:value format.
+Strict requires that *all* data in the input source is formatted 
+in `key:value` format.
 
 Error Handling: When Strict is set to True, the function prints 
 error messages to stderr, and exits the program if certain 
@@ -43,6 +41,10 @@ are handled as critical errors rather than warnings.
 
 
 """
+__version__ = '0.8.2'
+import os
+import sys
+import re
 
 class StructuredTextError(Exception):
     pass
@@ -58,34 +60,36 @@ class FileNotFoundError(StructuredTextError):
 
 def extract(
     input_source: str | dict | list[str], 
-    *, keyvar: str | None = None, 
-    delvars:list[str]=[],
-    quiet: bool = False, 
-    strict: bool = False, 
-    no_comments: bool = False,
-    no_errors:bool = False,
-    freetext_name:str = '_FREETEXT_'
+    *, 
+    keyvars:list[str] | None  = [], 
+    delvars:list[str] | None  = [],
+    keyval_sep:str       = ':',    
+    quiet: bool          = False, 
+    strict: bool         = False, 
+    no_comments: bool    = False,
+    no_errors:bool       = False,
+    freetext_name:str    = '_FREETEXT_'
   ) -> dict:
   """
   Extracts StructuredText formatted variables from an input source
   that can be a filename, list, or dictionary. 
 
-  `StructuredText.extract` returns data in key:value format as 
-  a dictionary.
+  `StructuredText.extract` returns data from input source in the
+  form of a `key:value` `dict` type.
 
   Data in/from `input_source` should contain text lines in the 
-  format KEY:VALUE, where KEY is any valid Python variable name. 
+  format `key:value`, where `key` is any valid Python variable name. 
   Eg,
     DATE: 02/06/1957 00:02:00 
-  Enclose multi-line values with Pythonesque triple double 
-  quotes (\"\"\").
+
+  Enclose multi-line values with Pythonesque triple-quotes (\""").
   Eg, 
-    DATE_TIME_LOCATION: \"\"\"
+    DATE_TIME_LOCATION: \"""
       DATE: 02/06/1957 
       TIME: 02:00:00
       LOCATION: Bali
       In Bali, the date is 02/06/1957 at 02:00:00.
-    \"\"\"
+    \"""
 
   Blank lines not within multi-line values are ignored.
   Lines starting with '#' are treated as comments and are stored
@@ -97,6 +101,26 @@ def extract(
   '_FREETEXT_'.
 
   Args:
+    input_source:   If `str`, denotes a filename to read.
+                    If `dict`|`list`, denotes a dictionary or list. 
+    keyvar:         If specified, only the `keyvar` variable from 
+                    the list will be returned. 
+                    Otherwise, all variables will be returned. 
+    keyval_sep:     Separator string between `key` and `value`. 
+                    Default ':'.
+    delvars:        If a `list` of variables to remove from the 
+                    output.
+    quiet:          If True, warnings are not displayed. 
+                    Default False.
+    strict:         Strict mode. Default False.  All variables in 
+                    input_source must be strictly complient with 
+                    StructuredText format, otherwise an error is 
+                    invoked. 
+    no_comments:    If True, comments in the input_source are not 
+                    outputted. Default False.
+    no_errors:      bool      = False,
+    freetext_name:  Name of keyvar where unstructured text is 
+                    stored. Default is '_FREETEXT_'.
 
   Returns:
   dict: A dictionary where the keys are variable names from the 
@@ -113,27 +137,31 @@ def extract(
   
   An example of a valid StructuredText file would be formatted like this:
   
-  ```StructuredText
+  ```structuredtext
   # StructuredText Example format.
+
   # Each comment line is stored in the
   # special keyvars _COMMENT_n (unless disabled).
   PROJECT_NAME: Seeking Dharma
-  TITLE: Aspects of Secularised Dharmas
-  DATESTAMP: 02/06/1957 02:00:00
 
+  TITLE: Aspects of Secularised Dharmas
+
+  DATESTAMP: 02/06/1957 02:00:00
   LOCATION: Bali
 
   # Blank lines between the keyvars above 
   # are ignored.
   # Blank lines in a multi-line keyvar 
   # (like below) are *not* ignored.
+  
   DESCRIPTION: \"""
   Cherrypicking The Dharma?
-  Yes. I mean No. I mean, "The" Dharma?
+  Yes. I mean No. I mean, "The" Dharma??
   There are many dharmas.  
   Not all have a capital D.
-  And all have commonalities in values 
-  and practice.
+  But many have commonalities in terms of
+  values and practice.
+  
   So it's not really cherrypicking.
   It's more like pickpocketing.
 
@@ -158,14 +186,14 @@ def extract(
   DEV_NOTE: \"""
   There is a limitation when assigning values 
   in multi-line keyvars where the value contains
-  embedded triple-double-quotes (\""").
+  embedded triple-quotes (\""").
 
   Takeaway: Multi-line keyvar values need to 
-  have embedded triple-double-quotes escaped, 
+  have embedded triple-quotes escaped, 
   eg, \"""
   \"""
 
-  # My ID
+  # Document ID
   ID: OKUSI420
 
   ```
@@ -211,7 +239,9 @@ def extract(
   current_var_name  = ''
   current_var_value = ''
   multiline:bool    = False
-  key_value_pattern = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(.*)$')
+  keyvar            = True if keyvars else False
+  key_value_pattern = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)\s*' + re.escape(keyval_sep) + r'\s*(.*)$')
+
   comment_n:int     = 0
   verbose:bool      = not quiet
 
@@ -219,10 +249,14 @@ def extract(
     if multiline:
       if re.search(r'^\s*\"\"\"\s*$', line):
         # r'^\s*\"\"\"\s*$' marks the end of a multiline variable
-        variables[current_var_name] = current_var_value #.strip()
-        # shortcut exit if keyvar is found 
-        if keyvar and keyvar == current_var_name:
-          return { keyvar: current_var_value }
+        if keyvars:
+          if current_var_name in keyvars:
+            variables[current_var_name] = current_var_value
+            keyvars.remove(current_var_name)
+            # shortcut exit if keyvars is now empty 
+            if not keyvars: return variables
+        else:
+          variables[current_var_name] = current_var_value
         current_var_name  = ''
         current_var_value = ''
         multiline         = False
@@ -233,8 +267,7 @@ def extract(
         # Ignore all blank lines between keyvar declarations
         continue
       if line.lstrip().startswith('#'):
-        if no_comments:
-          continue
+        if no_comments or keyvars: continue
         # Create `_COMMENT_?` variable from lines starting with '#'
         line = line.lstrip().lstrip('#').lstrip()
         comment_n+=1
@@ -258,11 +291,14 @@ def extract(
           current_var_value = ''
           multiline         = True
         else:
-          # assign single line variable
-          variables[current_var_name] = current_var_value
-          # shortcut exit if keyvar is found
-          if keyvar and keyvar == current_var_name:
-            return { keyvar: current_var_value }
+          if keyvar:
+            if current_var_name in keyvars:
+              variables[current_var_name] = current_var_value
+              keyvars.remove(current_var_name)
+              # shortcut exit if keyvars is now empty 
+              if not keyvars: return variables
+          else:
+            variables[current_var_name] = current_var_value
           current_var_name  = ''
           current_var_value = ''
       else:
@@ -290,13 +326,12 @@ def extract(
     if verbose: ERRORS += errmsg + '\n'
     FREETEXT = file_content
 
-  if keyvar:
-    """ If keyvar is specified, only return that keyvar:value, 
-        otherwise return {} """
-    # This should not be necessary, as keyvar takes a shortcut
-    if keyvar in variables:
-      return { keyvar: variables.get(keyvar, '') }
-    errmsg = f"Variable '{keyvar}' not found in {source}."
+  if keyvars:
+    """ 
+    There's still content in the keyvars array, meaning not
+    found 
+    """
+    errmsg = f"Variable/s '{keyvars}' not found in {source}."
     if verbose or strict: print(errmsg, file=sys.stderr)
     if strict:
       raise StructuredTextError(errmsg)
@@ -336,15 +371,18 @@ def extract(
   return variables
 
 
-def write_dict_to_st(variables:dict, *, 
-      keyvar=None, 
-      filename=None, 
-      lf:int=2, 
-      sep:int=1
+def write_dict_to_st(
+    variables:dict, 
+    *, 
+    keyvar:str      = None, 
+    keyval_sep:str  = ':',    
+    filename:str    = None, 
+    lf:int          = 2, 
+    sep:int         = 1
   ):
   """
     Print out all key variables in 'dict' to 
-    StructuredText format. 
+    StructuredText format to file or stdout. 
   """
   hfile    = open(filename, 'w') if filename else sys.stdout 
   printend = '\n' * max(0, lf)
@@ -355,23 +393,23 @@ def write_dict_to_st(variables:dict, *,
       if '\n' in value:
         # guard for nested terminating """
         valueq = value.replace('"""\n', '\"\"\"\n')
-        print(f'{key}:{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
+        print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
       elif key.startswith('_COMMENT_'):
         print(f'#{sepc}{value}', end=printend, file=hfile)
       else:
-        print(f'{key}:{sepc}{value}', end=printend, file=hfile)
+        print(f'{key}{keyval_sep}{sepc}{value}', end=printend, file=hfile)
       if filename: hfile.close()
       return True
     if '\n' in value:
       valueq = value.replace('"""\n', '\"\"\"\n')
-      print(f'{key}:{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
+      print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
     elif key.startswith('_COMMENT_'):
       # comments are kept together
       print(f'#{sepc}{value}', 
         end=('\n' if len(printend) else printend), 
         file=hfile)
     else:
-      print(f'{key}:{sepc}{value}', end=printend, file=hfile)
+      print(f'{key}{keyval_sep}{sepc}{value}', end=printend, file=hfile)
   if filename: hfile.close()
   return True
 

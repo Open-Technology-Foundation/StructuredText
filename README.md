@@ -18,16 +18,21 @@ StructuredText format is a very simple and flexible way to represent textual key
 Input can be processed in a "Loose" mode, or a "Strict" mode.  In Strict mode StructuredText demands rigid adherance to the standard 'key:value' structure, and returns an error condition when this fails.
 
 A valid single-line keyvar assignment has the following general form:
+
     `{KEYNAME}[blank]:[blank]{VALUE}`
+
 For example:
+
     ```
     DATE: 1957-10-04 19:28:34
     ```
 
 A valid multi-line keyvar assignment has the following general form:
+
     `{KEYNAME}[blank]:[blank]"""\n{VALUE}\n[blank]"""[blank]\n`
 
 For example:
+
     ```
     ARTICLE: """
     This is a multi-line text.

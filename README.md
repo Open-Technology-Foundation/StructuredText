@@ -15,6 +15,8 @@ The terminal script, `st.extract` imports the `StructuredText` module (as st), `
 
 StructuredText format is a very simple and flexible way to represent textual key-value pairs that are structured, but with high human-readablity, with support for comments and multi-line values.
 
+Input can be processed in a "Loose" mode, or a "Strict" mode.  In Strict mode StructuredText demands rigid adherance to the standard 'key:value' structure, and returns an error condition when this fails.
+
 ### 'Strict' Mode
 Strict mode in the extract function controls how the function 
 behaves when it encounters certain conditions or errors. 
@@ -57,6 +59,17 @@ Extracts StructuredText formatted variables from an input source that can be a f
   Returns:
   dict: A dictionary where the keys are variable names from the file, and the values are the corresponding values from the file. 
   If no valid variables are found, the dictionary will contain a single item with the key '_FREETEXT_'.
+
+### Function write_dict_to_st( 
+    variables:dict, 
+    keyvar:str      = None, 
+    keyval_sep:str  = ':',    
+    filename:str    = None, 
+    lf:int          = 2, 
+    sep:int         = 1
+  ):
+
+  Print out all key variables in 'dict' to file or stdout in `StructuredText` format. 
 
 
 ### Shell Script `st.extract`

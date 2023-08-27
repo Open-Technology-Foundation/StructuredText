@@ -1,0 +1,30 @@
+#!/bin/bash
+set -e
+
+cd /ai/scripts/lib/StructuredText
+
+ver="$(./st.extract -V)"
+#ver=$(cat whatlang.version)
+#echo -n '0.9.'$((${ver##*\.9\.}+1)) >dejavu.version
+#git add dejavu.version
+#ver=$(cat dejavu.version)
+#echo "Version $ver"
+#echo ---
+
+# manpages
+#doc/makedoc
+#git init
+#git add .
+#git commit -m "first commit"
+#git branch -M main
+#git remote add origin https://github.com/Open-Technology-Foundation/whatlang.git
+#git push -u origin main
+
+#sudo pipreqs --force --mode gt --ignore bash,__pycache__,.git,dev,gudang,doc 2>/dev/null
+
+sudo git add .
+sudo git commit -m "${1:-update ${ver}}"
+#git branch -M main
+#git remote add origin https://github.com/Open-Technology-Foundation/whatlang.git
+sudo git push #-u origin main
+

@@ -19,29 +19,31 @@ Input can be processed in a "Loose" mode, or a "Strict" mode.  In Strict mode St
 
 A valid single-line keyvar assignment has the following general form:
 
-    `{KEYNAME}[blank]:[blank]{VALUE}`
+```
+{KEYNAME}[blank]:[blank]{VALUE}`
+```
 
 For example:
 
-    ```
-    DATE: 1957-10-04 19:28:34
-    ```
+```
+DATE: 1957-10-04 19:28:34
+```
 
 A valid multi-line keyvar assignment has the following general form:
 
-    `{KEYNAME}[blank]:[blank]"""\n{VALUE}\n[blank]"""[blank]\n`
+```
+{KEYNAME}[blank]:[blank]"""\n{VALUE}\n[blank]"""[blank]\n
+```
 
 For example:
 
-    ```
-    ARTICLE: """
-    This is a multi-line text.
-
-    This is the next line.
-
-    And the next...
-    """
-    ```
+```
+ARTICLE: """
+This is a multi-line text.
+This is the next line.
+And the next...
+"""
+```
 
 In both cases, [blank] chars are ignored and do not need to be present.
 

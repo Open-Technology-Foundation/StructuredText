@@ -3,19 +3,43 @@ StructuredText format is a very simple and flexible way to represent textual key
 
 It can be used to store configuration settings, articles, transcripts, etc, with metadata, and other textual information, where a high degree of human readability is required or desirable.
 
-The `StructuredText` package comprises a Python module, `StructuredText`, and a terminal script, `st.extract`.
-
 Requires Python 3.10 or higher.
+
+The `StructuredText` package comprises a Python module, `StructuredText`, and a terminal script, `st.extract`.
 
 The `StructuredText` module imports `os`, `sys`, and `re` only.
 
-The terminal script, `st.extract` imports the `StructuredText` module (as st), `argparse` and `pydoc`.
+The terminal script, `st.extract` also imports the `StructuredText` module (as `st`), `json`, `argparse` and `pydoc`.
 
 ## Module 'StructuredText'
 
 StructuredText format is a very simple and flexible way to represent textual key-value pairs that are structured, but with high human-readablity, with support for comments and multi-line values.
 
 Input can be processed in a "Loose" mode, or a "Strict" mode.  In Strict mode StructuredText demands rigid adherance to the standard 'key:value' structure, and returns an error condition when this fails.
+
+A valid single-line keyvar assignment has the following general form:
+    `{KEYNAME}[blank]:[blank]{VALUE}`
+For example:
+    ```
+    DATE: 1957-10-04 19:28:34
+    ```
+
+A valid multi-line keyvar assignment has the following general form:
+    `{KEYNAME}[blank]:[blank]"""\n{VALUE}\n[blank]"""[blank]\n`
+
+For example:
+    ```
+    ARTICLE: """
+    This is a multi-line text.
+
+    This is the next line.
+
+    And the next...
+    """
+    ```
+
+In both cases, [blank] chars are ignored and do not need to be present.
+
 
 ### 'Strict' Mode
 Strict mode in the extract function controls how the function 

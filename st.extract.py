@@ -50,9 +50,10 @@ options:
 """
 import os
 import sys
-import StructuredText as st
+import json
 import argparse
 import pydoc
+import StructuredText as st
  
 if __name__ == '__main__':
   script_name = os.path.basename(__file__)
@@ -68,7 +69,7 @@ if __name__ == '__main__':
       formatter_class=argparse.RawTextHelpFormatter)
 
   p.add_argument('filename', 
-      help=f'Text file to read into StructuredText format.')
+      help= 'Text file to read into StructuredText format.')
 
   p.add_argument('keyvars', nargs='?', default=None, 
       help= 'List of comma-delimited keyvar names to find \n'
@@ -137,8 +138,9 @@ if __name__ == '__main__':
   args = p.parse_args()
   # print version and exit
   if args.version:
-    print(__version__)
+    print(script_name, __version__)
     sys.exit(0)
+
   # Make sure the input filename exists, otherwise exit
   if not (os.path.isfile(args.filename) and os.access(pathname, os.R_OK)):
     print(f'{script_name}: {args.filename} does not exist or cannot be read.', file=sys.stderr)
@@ -198,7 +200,6 @@ if __name__ == '__main__':
 
     # Print out raw json then exit
     if args.json:
-      import json
       indent = None if args.json_indent == '' \
           or args.json_indent.lower() == 'none' \
           else max(0, int(args.json_indent))

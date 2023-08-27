@@ -15,8 +15,6 @@ The terminal script, `st.extract` also imports the `StructuredText` module (as `
 
 StructuredText format is a very simple and flexible way to represent textual key-value pairs that are structured, but with high human-readablity, with support for comments and multi-line values.
 
-Input can be processed in a "Loose" mode, or a "Strict" mode.  In Strict mode StructuredText demands rigid adherance to the standard 'key:value' structure, and returns an error condition when this fails.
-
 A valid single-line keyvar assignment has the following general form:
 
 `{KEY}[blank]:[blank]{VALUE}`
@@ -46,6 +44,14 @@ And the next...
 In both cases, [blank] chars are ignored and do not need to be present.
 
 
+Input can be processed in a "Loose" mode, or a "Strict" mode.  In Strict mode StructuredText demands rigid adherance to the standard 'key:value' structure, and returns an error condition when this fails.
+
+### 'Loose' Mode
+'Loose' mode allows the import of as-yet unstructured text into a StructuredText format.  'Loose' mode can contain completely unstructured text, which will be aggregated into keyvar called \_FREETEXT\_.  Input can also be a combination of unstructured and structured text.
+
+By default, StructuredText uses 'Loose' mode.
+
+
 ### 'Strict' Mode
 Strict mode in the extract function controls how the function 
 behaves when it encounters certain conditions or errors. 
@@ -58,7 +64,7 @@ error messages to stderr, and exits the program if certain
 conditions are not met.
 
 Key Handling: If the text contains no key, the content is dumped
-to the _FREETEXT_ key unless Strict mode is enabled.
+to the \_FREETEXT\_ key unless Strict mode is enabled.
 
 Strict mode enforces a more rigorous set of constraints upon the 
 text data within the `extract` function. If data format or issues
@@ -98,57 +104,73 @@ Extracts StructuredText formatted variables from an input source that can be a f
     sep:int         = 1
   ):
 
-  Print out all key variables in 'dict' to file or stdout in `StructuredText` format. 
+  Print out all key variables in 'dict' to file or stdout in StructuredText format. 
 
 
 ### Shell Script `st.extract`
 
 ```bash
-st.extract [-h] [-d DELVARS] [-S] [-n] [-f FREETEXT_NAME] [-s SEP]
-                  [-l LF] [-k] [-j] [-o OUTPUT] [-i JSON_INDENT] [-v]
-                  filename [keyvar]
+usage: st.extract [-h] [-d DELVARS] [-S] [-e] [-n] [-f FREETEXT_NAME]
+      [-p KEYVAL_SEP] [-P KEYVAL_OUTPUT_SEP] [-s SEP] [-l LF] [-k]
+      [-j] [-o OUTPUT] [-i JSON_INDENT] [-v] [-V]
+      filename [keyvars]
 ```
 
-Extract key variables from Structured Text file.
-For Structured Text format see library module StructuredText.py.
+Extract key variables from StructuredText file.
 
-#### positional arguments:
-  filename              Text file.
-  keyvars               Optional key variables to find and return;
-                        by default returns all key variables; def. 'None'.
+For StructuredText format see library module StructuredText.
 
-#### options:
-  -h, --help            show this help message and exit
+positional arguments:
+  filename              
+                    Text file to read into StructuredText format.
+  keyvars               
+                    List of comma-delimited keyvar names to find and return; by default returns all key variables.
 
+options:
+  -h, --help        Show this help message and exit.
   -d DELVARS, --delvars DELVARS
-                        List of comma delimited keys to remove from output; def. 'None'.
-  
-  -S, --strict
-                        Impose Strict mode; exit with error if a key variable in aline is not found.
-                        If False, all free text is aggregated into key variable _FREETEXT_; def. False.
-  
-  -n, --no_comments
-                        Ignore #comment lines. Default is to not ignore comment lines and store as `_COMMENT_n: comment`; def. 'False'.
-  ...
+                    List of comma-delimited keyvar names to find and delete from the output; def. None.
+  -S, --strict          
+                    Impose Strict mode; exit with error if a key variable is not found in a line. If False, all free text is aggregated into keyvar _FREETEXT_; def. False.
+  -e, --no_errors       
+                    Do not generate _ERRORS_ keyvar in output. Default is to generate _ERRORS_ keyvar if errors occur; if set to True, disables Strict mode (-S); def. False.
+  -n, --no_comments     
+                    Ignore #comment lines. Default is to not ignore comment line and store as '\_COMMENT\_n: comment text'; def. False.
   -f FREETEXT_NAME, --freetext_name FREETEXT_NAME
-                        Name of key to collate free text; def. '_FREETEXT_'.
-  
+                    Name of key to collate free text; def. '\_FREETEXT\_'.
+  -p KEYVAL_SEP, --keyval_sep KEYVAL_SEP
+                    Key:Value separator; def. ':'.
+  -P KEYVAL_OUTPUT_SEP, --keyval_output_sep KEYVAL_OUTPUT_SEP
+                    Key:Value separator for output; def. ':'.
   -s SEP, --sep SEP     
-                        Number of spaces after ':'; def. '1'.
-  
+                    Number of spaces after ':' (keyval_sep); def. 1.
   -l LF, --lf LF        
-                        Number of linefeeds printed after each key variable; def. '2'.
-  
+                    Number of linefeeds printed after each key variable; def. 2.
   -k, --showkeys        
-                        Print all keys found in file and exit; def. 'False'
-  
-  -j, --json            Output raw json; def. 'False'.
-  
+                    Print all keys found in file and exit; def. False
+  -j, --json        Output raw json; def. False.
   -o OUTPUT, --output OUTPUT
-                        Output to filename; def 'None'.
-  
+                    Output to filename; def None.
   -i JSON_INDENT, --json_indent JSON_INDENT
-                        JSON output indent, integer or 'none'; def. '2'.
-  
-  -v, --verbose         Be not quiet; def. 'False'.
+                    JSON output indent, integer or 'none'; def. 2.
+  -v, --verbose     Be not quiet; def. False.
+  -V, --version     Display version and exit; def. False.
+
+Examples:
+
+```
+st.extract test00-st-format.txt
+```
+
+```
+st.extract test00-st-format.txt ID,TITLE,AUTHOR,CONTACT
+```
+
+```
+st.extract test01.transcript.txt DESCRIPTION,PUBLISHER
+```
+
+```
+st.extract test02.loose.transcript.txt -e -f TRANSCRIPT
+```
 

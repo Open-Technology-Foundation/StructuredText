@@ -65,7 +65,11 @@ if __name__ == '__main__':
   p = argparse.ArgumentParser(
       description='Extract key variables from StructuredText file.\n\n'
         'For StructuredText format see library module StructuredText.',
-      epilog='Examples:\n',
+      epilog='Examples:\n'
+        'st.extract test00-st-format.txt \n' 
+        'st.extract test00-st-format.txt ID,TITLE,AUTHOR,CONTACT\n'
+        'st.extract test01.transcript.txt DESCRIPTION,PUBLISHER\n'
+        'st.extract test02.loose.transcript.txt -e -f TRANSCRIPT',
       formatter_class=argparse.RawTextHelpFormatter)
 
   p.add_argument('filename', 
@@ -142,7 +146,7 @@ if __name__ == '__main__':
     sys.exit(0)
 
   # Make sure the input filename exists, otherwise exit
-  if not (os.path.isfile(args.filename) and os.access(pathname, os.R_OK)):
+  if not (os.path.isfile(args.filename) and os.access(args.filename, os.R_OK)):
     print(f'{script_name}: {args.filename} does not exist or cannot be read.', file=sys.stderr)
     sys.exit(2)
 

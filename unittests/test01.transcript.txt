@@ -5,19 +5,16 @@ TITLE: 6. Behavioral Genetics I
 ID: e0WZx7lUOrY
 
 PUBLISHER: """
-YouTube Video Owner Channel Title: Stanford 
-
-YouTube Video Owner Id: UC-EnprmCZ3OXyAoG7vjVNCA
-
-YouTube Channel Title: a secular dharma?
-
-YouTube Channel Id: UCJ9zuxSNKALELgjGBMtOC_w
+Video_Owner_Channel_Title: Stanford 
+Video_Owner_Id: UC-EnprmCZ3OXyAoG7vjVNCA
+Channel_Title: a secular dharma?
+Channel_Id: UCJ9zuxSNKALELgjGBMtOC_w
 """
 
-DATE: 2020-04-17T00:46:51Z
+DATE: 2010-04-12T00:46:51Z
 
 DESCRIPTION: """
-(April 12, 2010) Robert Sapolsky introduces a two-part series exploring the controversial scientific practice of inferring behavior to genetics. He covers classical techniques in behavior genetics and flaws, the significance of environmental factors, non genetic inheritance of traits, and multigenerational effects and relationship to epigenetic differences.
+Robert Sapolsky introduces a two-part series exploring the controversial scientific practice of inferring behavior to genetics. He covers classical techniques in behavior genetics and flaws, the significance of environmental factors, non genetic inheritance of traits, and multigenerational effects and relationship to epigenetic differences.
 
 Stanford University
 http://www.stanford.edu

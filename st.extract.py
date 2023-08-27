@@ -58,8 +58,9 @@ if __name__ == '__main__':
   script_name = os.path.basename(__file__)
   # Manually check for the presence of '-V' or '--version'
   if '-V' in sys.argv or '--version' in sys.argv:
-    print(st.__version__)
+    print(script_name, st.__version__)
     sys.exit(0)
+
   p = argparse.ArgumentParser(
       description='Extract key variables from StructuredText file.\n\n'
         'For StructuredText format see library module StructuredText.',
@@ -70,18 +71,17 @@ if __name__ == '__main__':
       help=f'Text file to read into StructuredText format.')
 
   p.add_argument('keyvars', nargs='?', default=None, 
-      help= 'List of comma-delimited keys to find and return, \n'
-            'separated by commas; \n'
-            'by default returns all key variables.')
+      help= 'List of comma-delimited keyvar names to find \n'
+            'and return; by default returns all key variables.')
 
   p.add_argument('-d', '--delvars', type=str, default=None, 
-      help= "List of comma delimited keys to remove from output; \n" 
-            "def. %(default)s.")
+      help= 'List of comma-delimited keyvar names to find \n'
+            'and delete from the output; def. %(default)s.')
 
   p.add_argument('-S', '--strict', action='store_true', default=False, 
       help= 'Impose Strict mode; exit with error if a key variable \n' 
             'is not found in a line. If False, all free text is \n' 
-            "aggregated into keyvar _FREETEXT_; def. %(default)s.")
+            'aggregated into keyvar _FREETEXT_; def. %(default)s.')
 
   p.add_argument('-e', '--no_errors', action='store_true', default=False, 
       help= 'Do not generate _ERRORS_ keyvar in output. Default is \n'
@@ -106,28 +106,28 @@ if __name__ == '__main__':
       help= "Number of spaces after ':' (keyval_sep); def. %(default)s.")
 
   p.add_argument('-l', '--lf', type=int, default=2, 
-      help= "Number of linefeeds printed after each key variable;\n"
-            "def. %(default)s.")
+      help= 'Number of linefeeds printed after each key variable;\n'
+            'def. %(default)s.')
 
   p.add_argument('-k', '--showkeys', action='store_true', default=False, 
-      help= "Print all keys found in file and exit;\n"
-            "def. %(default)s")
+      help= 'Print all keys found in file and exit; \n'
+            'def. %(default)s')
 
   p.add_argument('-j', '--json', action='store_true', default=False, 
-      help= "Output raw json; def. %(default)s.")
+      help= 'Output raw json; def. %(default)s.')
 
   p.add_argument('-o', '--output', default=None, 
-      help= "Output to filename; def %(default)s.")
+      help= 'Output to filename; def %(default)s.')
 
   p.add_argument('-i', '--json_indent', default='2', 
       help= "JSON output indent, integer or 'none';\n" 
-            "def. %(default)s.")
+            'def. %(default)s.')
 
   p.add_argument('-v', '--verbose', action='store_true', default=False, 
-      help= "Be not quiet; def. %(default)s.")
+      help= 'Be not quiet; def. %(default)s.')
 
   p.add_argument('-V', '--version', action='store_true', default=False, 
-      help= "Display version and exit; def. %(default)s.")
+      help= 'Display version and exit; def. %(default)s.')
 
   def print_help_paged():
     help_text = p.format_help()
@@ -139,9 +139,10 @@ if __name__ == '__main__':
   if args.version:
     print(__version__)
     sys.exit(0)
-  if not os.path.exists(args.filename):
-    print(f"{script_name}: {args.filename} does not exist.", file=sys.stderr)
-    sys.exit(1)
+  # Make sure the input filename exists, otherwise exit
+  if not (os.path.isfile(args.filename) and os.access(pathname, os.R_OK)):
+    print(f'{script_name}: {args.filename} does not exist or cannot be read.', file=sys.stderr)
+    sys.exit(2)
 
   if args.keyvars:
     keyvars_list  = args.keyvars.replace(',',' ').split()
@@ -188,7 +189,7 @@ if __name__ == '__main__':
       )
 
     if not variables:
-      sys.exit(1)
+      sys.exit(2)
 
     # Show found keys only then exit
     if args.showkeys:
@@ -228,6 +229,6 @@ if __name__ == '__main__':
 
   except KeyboardInterrupt:
     print('^C\n', file=sys.stderr)
-    sys.exit(1)
+    sys.exit(130)
 
 #fin

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.10
 """
 # Module 'StructuredText'
-
+ 
 The StructuredText format is a simple, flexible, and human-readable 
 way to represent key-value pairs, with support for comments and 
 multi-line values.
@@ -41,7 +41,8 @@ are handled as critical errors rather than warnings.
 
 
 """
-__version__ = '0.8.2'
+__version__ = '0.8.31'
+
 import os
 import sys
 import re

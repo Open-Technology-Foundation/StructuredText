@@ -206,3 +206,4 @@ temp/
 *~
 ~*
 .gitcommit
+*.bak

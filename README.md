@@ -1,4 +1,5 @@
 # StructuredText
+
 StructuredText format is a very simple and flexible way to represent textual key-value pairs that are structured, but with high human-readablity, with support for comments and multi-line values.
 
 It can be used to store configuration settings, articles, transcripts, etc, with metadata, and other textual information, where a high degree of human readability is required or desirable.
@@ -7,9 +8,9 @@ Requires Python 3.10 or higher.
 
 The `StructuredText` package comprises a Python module, `StructuredText`, and a terminal script, `st.extract`.
 
-The `StructuredText` module imports `os`, `sys`, and `re` only.
+The `StructuredText` module only imports `os`, `sys`, and `re`.
 
-The terminal script, `st.extract` also imports the `StructuredText` module (as `st`), `json`, `argparse` and `pydoc`.
+The terminal script, `st.extract` also imports the `StructuredText`, `json`, `argparse` and `pydoc` modules.
 
 ## Module 'StructuredText'
 
@@ -53,29 +54,20 @@ By default, StructuredText uses 'Loose' mode.
 
 
 ### 'Strict' Mode
-Strict mode in the extract function controls how the function 
-behaves when it encounters certain conditions or errors. 
-By default, Strict is set to False.
+Strict mode in the extract function controls how the function behaves when it encounters certain conditions or errors. By default, Strict is set to False.
 
 Strict requires that *all* data is formatted in key:value format.
 
-Error Handling: When Strict is set to True, the function prints 
-error messages to stderr, and exits the program if certain 
-conditions are not met.
+Error Handling: When Strict is set to True, the function prints error messages to stderr, and exits the program if certain conditions are not met.
 
-Key Handling: If the text contains no key, the content is dumped
-to the \_FREETEXT\_ key unless Strict mode is enabled.
+Key Handling: If the text contains no key, the content is dumped to the \_FREETEXT\_ key unless Strict mode is enabled.
 
-Strict mode enforces a more rigorous set of constraints upon the 
-text data within the `extract` function. If data format or issues
-occur, an error message will appear, and the program will be 
-terminated. 
+Strict mode enforces a more rigorous set of constraints upon the text data within the `extract` function. If data format or issues occur, an error message will appear, and the program will be terminated. 
 
-Strict mode is useful for ensuring that the input data adheres 
-to the expected StructuredText format and that any discrepancies 
-are handled as critical errors rather than warnings.
+Strict mode is useful for ensuring that the input data adheres to the expected StructuredText format and that any discrepancies are handled as critical errors rather than warnings.
 
 ### Function extract()
+
 Extracts StructuredText formatted variables from an input source that can be a filename, list, or dictionary. 
 
   The `StructuredText.extract` function returns data in key:value format as a dictionary.
@@ -86,16 +78,16 @@ Extracts StructuredText formatted variables from an input source that can be a f
 
   Blank lines that are not within multi-line values are ignored.
 
-  Lines starting with '#' are treated as comments and are stored in a special key variable of '_COMMENT_'{n}. Optionally, comment
-  lines can be completely ignored using parameter `no_comments=True`.
+  Lines starting with '#' are treated as comments and are stored in a special key variable of '_COMMENT_'{n}. Optionally, comment lines can be completely ignored using parameter `no_comments=True`.
 
   If no valid key:value pairs are found in the file, and `Strict` mode is not set, then the entire content of `input_source` is stored and returned in special key variable called '_FREETEXT_'.
 
   Returns:
   dict: A dictionary where the keys are variable names from the file, and the values are the corresponding values from the file. 
+
   If no valid variables are found, the dictionary will contain a single item with the key '_FREETEXT_'.
 
-### Function write_dict_to_st( 
+### Function write_dict_to_st(
     variables:dict, 
     keyvar:str      = None, 
     keyval_sep:str  = ':',    
@@ -120,6 +112,7 @@ Extract key variables from StructuredText file.
 
 For StructuredText format see library module StructuredText.
 
+```
 positional arguments:
   filename              
                     Text file to read into StructuredText format.
@@ -158,19 +151,12 @@ options:
 
 Examples:
 
-```
-st.extract test00-st-format.txt
-```
+    st.extract test00-st-format.txt
+    
+    st.extract test00-st-format.txt ID,TITLE,AUTHOR,CONTACT
+    
+    st.extract test01.transcript.txt DESCRIPTION,PUBLISHER
+    
+    st.extract test02.loose.transcript.txt -e -f TRANSCRIPT
 
 ```
-st.extract test00-st-format.txt ID,TITLE,AUTHOR,CONTACT
-```
-
-```
-st.extract test01.transcript.txt DESCRIPTION,PUBLISHER
-```
-
-```
-st.extract test02.loose.transcript.txt -e -f TRANSCRIPT
-```
-

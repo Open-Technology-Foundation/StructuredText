@@ -405,9 +405,8 @@ def write_dict_to_st(
     if '\n' in value:
       valueq = value.replace('"""\n', '\"\"\"\n')
       if not multiline:
-        valueq = value.replace('\n', '\\n')
-        valueq = value.replace('"', '\\"')
-        print(f'{key}{keyval_sep}{sepc}"{valueq}"', end=printend, file=hfile)
+        valueq = value.replace('\n', '\\n').replace("'", "\\'")
+        print(f"{key}{keyval_sep}{sepc}'{valueq}'", end=printend, file=hfile)
       else:
         print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
     elif key.startswith('_COMMENT_'):

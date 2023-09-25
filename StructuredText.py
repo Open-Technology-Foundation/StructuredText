@@ -404,8 +404,8 @@ def write_dict_to_st(
       return True
     if '\n' in value:
       if not multiline:
-        #valueq = value.replace('"', '\\"')
-        valueq = value.replace('\n', '\\\n').replace('"', '\\"')
+        valueq = value.replace('"', '\\"')
+        #valueq = value.replace('\n', '\\\n').replace('"', '\\"')
         print(f"{key}{keyval_sep}{sepc}\"" +valueq+"\"", end=printend, file=hfile)
       else:
         valueq = value.replace('"""\n', '\"\"\"\n')

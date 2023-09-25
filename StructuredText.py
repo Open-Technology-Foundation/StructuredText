@@ -405,7 +405,7 @@ def write_dict_to_st(
     if '\n' in value:
       valueq = value.replace('"""\n', '\"\"\"\n')
       if not multiline:
-        valueq = value.replace('\n', '\\n').replace('"', '\\"')
+        valueq = value.replace('\n', '\\\\n').replace('"', '\\"')
         print(f"{key}{keyval_sep}{sepc}\"{valueq}\"", end=printend, file=hfile)
       else:
         print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
@@ -416,7 +416,7 @@ def write_dict_to_st(
         file=hfile)
     else:
       qt=''
-      if multiline and ' ' in value:
+      if (not multiline) and ' ' in value:
          value = value.replace('"', '\\"')
          qt='"'
       print(f'{key}{keyval_sep}{sepc}{qt}{value}{qt}', end=printend, file=hfile)

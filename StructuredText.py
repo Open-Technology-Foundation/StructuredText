@@ -379,7 +379,8 @@ def write_dict_to_st(
     keyval_sep:str  = ':',    
     filename:str    = None, 
     lf:int          = 2, 
-    sep:int         = 1
+    sep:int         = 1,
+    multiline       = 1
   ):
   """
     Print out all key variables in 'dict' to 
@@ -403,7 +404,11 @@ def write_dict_to_st(
       return True
     if '\n' in value:
       valueq = value.replace('"""\n', '\"\"\"\n')
-      print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
+      if not multiline:
+        valueq = value.replace('\n', '\\n')
+        print(f'{key}{keyval_sep}{sepc}{valueq}\n', end=printend, file=hfile)
+      else:
+        print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)
     elif key.startswith('_COMMENT_'):
       # comments are kept together
       print(f'#{sepc}{value}', 

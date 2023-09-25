@@ -406,7 +406,7 @@ def write_dict_to_st(
       if not multiline:
         #valueq = value.replace('"', '\\"')
         valueq = value.replace('\n', '\\\\n').replace('"', '\\"')
-        print(f"{key}{keyval_sep}{sepc}\"{valueq}\"", end=printend, file=hfile)
+        print(f"{key}{keyval_sep}{sepc}\"" +valueq+"\"", end=printend, file=hfile)
       else:
         valueq = value.replace('"""\n', '\"\"\"\n')
         print(f'{key}{keyval_sep}{sepc}\"\"\"\n{valueq}\n\"\"\"', end=printend, file=hfile)

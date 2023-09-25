@@ -415,11 +415,10 @@ def write_dict_to_st(
         end=('\n' if len(printend) else printend), 
         file=hfile)
     else:
+      qt=''
       if multiline and ' ' in value:
          value = value.replace('"', '\\"')
          qt='"'
-      else:
-        qt=''
       print(f'{key}{keyval_sep}{sepc}{qt}{value}{qt}', end=printend, file=hfile)
   if filename: hfile.close()
   return True

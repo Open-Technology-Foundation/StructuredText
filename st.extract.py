@@ -110,6 +110,9 @@ if __name__ == '__main__':
   p.add_argument('-s', '--sep', type=int, default=1, 
       help= "Number of spaces after ':' (keyval_sep); def. %(default)s.")
 
+  p.add_argument('-M', '--multiline', type=int, default=1, 
+      help= "0=Write out a multiline variable as a single line; def. %(default)s.")
+
   p.add_argument('-l', '--lf', type=int, default=2, 
       help= 'Number of linefeeds printed after each key variable;\n'
             'def. %(default)s.')
@@ -229,7 +232,8 @@ if __name__ == '__main__':
         keyval_sep=args.keyval_output_sep,
         sep=args.sep, 
         lf=args.lf, 
-        filename=args.output
+        filename=args.output,
+        multiline=args.multiline
       )
 
   except KeyboardInterrupt:
